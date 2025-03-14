@@ -238,18 +238,18 @@ class Gaussians:
         # HINT: Are quats ever used or optimized for isotropic gaussians? What will their value be?
         # Based on your answers, can you write a more efficient code for the isotropic case?
         if self.is_isotropic:
-            import ipdb
-            ipdb.set_trace()
-            # WHAT IS VALUE OF QUATS / ROTATION MATRIX?
-            cov_3D = None  # (N, 3, 3)
+            # In isotropic case, quaternions cancel (R * R' = I), so cov_3D is just squared scales
+            cov_3D = torch.diag_embed(torch.square(scales).repeat([1, 3]))
 
         # HINT: You can use a function from pytorch3d to convert quaternions to rotation matrices.
         else:
             R = pytorch3d.transforms.quaternion_to_matrix(quats)
-            import ipdb
-            idpb.set_trace()
+            S = torch.diag_embed(scales)
+
             # R * S * S' * R'
-            cov_3D = ... # (N, 3, 3)
+            cov_3D = torch.matmul(R, S)
+            cov_3D = torch.matmul(cov_3D, torch.transpose(S, 1, 2))
+            cov_3D = torch.matmul(cov_3D, torch.transpose(R, 1, 2))  # (N, 3, 3)
 
         return cov_3D
 
@@ -281,7 +281,7 @@ class Gaussians:
         ### YOUR CODE HERE ###
         # HINT: Can you extract the world to camera rotation matrix (W) from one of the inputs
         # of this function?
-        W = camera.get_world_to_view_transform().get_matrix()  # (N, 3, 3)
+        W = camera.R.repeat(5, 1, 1)  # (N, 3, 3)
 
         ### YOUR CODE HERE ###
         # HINT: Can you find a function in this file that can help?
@@ -289,10 +289,11 @@ class Gaussians:
 
         ### YOUR CODE HERE ###
         # HINT: Use the above three variables to compute cov_2D
-        import ipdb
-        idpb.set_trace()
         # J * W * cov_3D * W' * J'
-        cov_2D = None  # (N, 2, 2)
+        cov_2D = torch.matmul(J, W)
+        cov_2D = torch.matmul(cov_2D, cov_3D)
+        cov_2D = torch.matmul(cov_2D, torch.transpose(W, 1, 2))
+        cov_2D = torch.matmul(cov_2D, torch.transpose(J, 1, 2))  # (N, 2, 2)
 
         # Post processing to make sure that each 2D Gaussian covers atleast approximately 1 pixel
         cov_2D[:, 0, 0] += 0.3
@@ -317,7 +318,20 @@ class Gaussians:
         ### YOUR CODE HERE ###
         # HINT: Do note that means_2D have units of pixels. Hence, you must apply a
         # transformation that moves points in the world space to screen space.
-        means_2D = camera.get_full_projection_transform().transform_points(means_3D)  # (N, 2)
+        means_3D = camera.get_world_to_view_transform().transform_points(means_3D)
+        means_3D = -torch.div(means_3D, means_3D[:, 2].unsqueeze(-1))
+        means_3D[:, 2] = 1
+
+        fx, fy = camera.focal_length[0]
+        px, py = camera.principal_point[0]
+        K = torch.Tensor([
+            [fx, 0.0, px],
+            [0.0, fy, py],
+            [0.0, 0.0, 1.0]
+        ])
+
+        means_2D = torch.transpose(torch.matmul(K, torch.transpose(means_3D, 0, 1)), 0, 1)[:, :2] # (N, 2)
+
         return means_2D
 
     @staticmethod
