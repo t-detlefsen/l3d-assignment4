@@ -379,7 +379,16 @@ class Gaussians:
         """
         ### YOUR CODE HERE ###
         # HINT: Refer to README for a relevant equation
-        power = None  # (N, H*W)
+        points_2D = points_2D.unsqueeze(2).repeat(means_2D.shape[0], 1, 1, 1)
+        means_2D = means_2D.unsqueeze(1)
+        cov_2D_inverse = cov_2D_inverse.unsqueeze(1)
+
+        A = points_2D - means_2D
+
+        # (points_2D - means_2d)' * cov_2D_inverse * # (points_2D - means_2d)
+        power = torch.matmul(A, cov_2D_inverse)
+        power = - torch.matmul(power, torch.transpose(A, 2, 3)) / 2
+        power = power.squeeze(2,3)  # (N, H*W)
 
         return power
 
