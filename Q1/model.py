@@ -427,8 +427,8 @@ class Scene:
         """
         ### YOUR CODE HERE ###
         # HINT: You can use get the means of 3D Gaussians self.gaussians and calculate
-        # the depth using the means and the camera
-        z_vals = None  # (N,)
+        # the depth using the means and the camera 
+        z_vals = camera.get_world_to_view_transform().transform_points(self.gaussians.means)[:, 2]  # (N,)
 
         return z_vals
 
@@ -449,7 +449,9 @@ class Scene:
         Please refer to the README file for more details.
         """
         ### YOUR CODE HERE ###
-        idxs = None  # (N,)
+
+        vals, idxs = z_vals.sort()
+        idxs = idxs[vals >= 0]  # (N,)
 
         return idxs
 
