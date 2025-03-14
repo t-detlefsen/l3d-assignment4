@@ -7,6 +7,8 @@ from pytorch3d.ops.knn import knn_points
 from pytorch3d.renderer.cameras import PerspectiveCameras
 from data_utils import load_gaussians_from_ply, colours_from_spherical_harmonics
 
+import pytorch3d
+
 class Gaussians:
 
     def __init__(
@@ -236,15 +238,18 @@ class Gaussians:
         # HINT: Are quats ever used or optimized for isotropic gaussians? What will their value be?
         # Based on your answers, can you write a more efficient code for the isotropic case?
         if self.is_isotropic:
-
-            ### YOUR CODE HERE ###
+            import ipdb
+            ipdb.set_trace()
+            # WHAT IS VALUE OF QUATS / ROTATION MATRIX?
             cov_3D = None  # (N, 3, 3)
 
         # HINT: You can use a function from pytorch3d to convert quaternions to rotation matrices.
         else:
-
-            ### YOUR CODE HERE ###
-            cov_3D = None  # (N, 3, 3)
+            R = pytorch3d.transforms.quaternion_to_matrix(quats)
+            import ipdb
+            idpb.set_trace()
+            # R * S * S' * R'
+            cov_3D = ... # (N, 3, 3)
 
         return cov_3D
 
@@ -271,19 +276,22 @@ class Gaussians:
         """
         ### YOUR CODE HERE ###
         # HINT: For computing the jacobian J, can you find a function in this file that can help?
-        J = None  # (N, 2, 3)
+        J = self._compute_jacobian(means_3D, camera, img_size)  # (N, 2, 3)
 
         ### YOUR CODE HERE ###
         # HINT: Can you extract the world to camera rotation matrix (W) from one of the inputs
         # of this function?
-        W = None  # (N, 3, 3)
+        W = camera.get_world_to_view_transform().get_matrix()  # (N, 3, 3)
 
         ### YOUR CODE HERE ###
         # HINT: Can you find a function in this file that can help?
-        cov_3D = None  # (N, 3, 3)
+        cov_3D = self.compute_cov_3D(quats, scales)  # (N, 3, 3)
 
         ### YOUR CODE HERE ###
         # HINT: Use the above three variables to compute cov_2D
+        import ipdb
+        idpb.set_trace()
+        # J * W * cov_3D * W' * J'
         cov_2D = None  # (N, 2, 2)
 
         # Post processing to make sure that each 2D Gaussian covers atleast approximately 1 pixel
@@ -309,7 +317,7 @@ class Gaussians:
         ### YOUR CODE HERE ###
         # HINT: Do note that means_2D have units of pixels. Hence, you must apply a
         # transformation that moves points in the world space to screen space.
-        means_2D = None  # (N, 2)
+        means_2D = camera.get_full_projection_transform().transform_points(means_3D)  # (N, 2)
         return means_2D
 
     @staticmethod
