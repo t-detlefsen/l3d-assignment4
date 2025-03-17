@@ -281,7 +281,7 @@ class Gaussians:
         ### YOUR CODE HERE ###
         # HINT: Can you extract the world to camera rotation matrix (W) from one of the inputs
         # of this function?
-        W = camera.R.repeat(5, 1, 1)  # (N, 3, 3)
+        W = camera.R.repeat(J.shape[0], 1, 1)  # (N, 3, 3)
 
         ### YOUR CODE HERE ###
         # HINT: Can you find a function in this file that can help?
@@ -328,7 +328,7 @@ class Gaussians:
             [fx, 0.0, px],
             [0.0, fy, py],
             [0.0, 0.0, 1.0]
-        ])
+        ]).to("cuda")
 
         means_2D = torch.transpose(torch.matmul(K, torch.transpose(means_3D, 0, 1)), 0, 1)[:, :2] # (N, 2)
 
@@ -638,7 +638,7 @@ class Scene:
 
         ### YOUR CODE HERE ###
         # HINT: Can you implement an equation inspired by the equation for colour?
-        mask = torch.sum(torch.ones(alphas.shape) * alphas * transmittance, dim=0)  # (H, W, 1)
+        mask = torch.sum(torch.ones(alphas.shape).to("cuda") * alphas * transmittance, dim=0)  # (H, W, 1)
 
         final_transmittance = transmittance[-1, ..., 0].unsqueeze(0)  # (1, H, W)
         return image, depth, mask, final_transmittance
