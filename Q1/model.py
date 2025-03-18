@@ -768,5 +768,5 @@ class Scene:
         # HINT: Do not forget to normalize the computed directions.
         view_transform = camera.get_world_to_view_transform()
         gaussian_dirs = view_transform.transform_points(means_3D)
-        gaussian_dirs = torch.normalize(gaussian_dirs)  # (N, 3)
+        gaussian_dirs = torch.nn.functional.normalize(gaussian_dirs)  # (N, 3)
         return gaussian_dirs

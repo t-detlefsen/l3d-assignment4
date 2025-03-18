@@ -225,7 +225,9 @@ def colours_from_spherical_harmonics(spherical_harmonics, gaussian_dirs):
     """
     ### YOUR CODE HERE ###
 
-    x, y, z = gaussian_dirs[:, 0], gaussian_dirs[:, 1], gaussian_dirs[:, 2]
+    x = gaussian_dirs[:, 0].unsqueeze(1).repeat(1, 3)
+    y = gaussian_dirs[:, 1].unsqueeze(1).repeat(1, 3)
+    z = gaussian_dirs[:, 2].unsqueeze(1).repeat(1, 3)
 
     (xx, yy, zz) = (x * x, y * y, z * z)
     (xy, yz, xz) = (x * y, y * z, x * z)
@@ -262,6 +264,6 @@ def colours_from_spherical_harmonics(spherical_harmonics, gaussian_dirs):
                SH_C3_5 * z * (xx - yy) * c14 + \
                SH_C3_6 * x * (xx - 3.0 * yy) * c15
     colours += 0.5
-    colours = np.clip(colours, 0.0, 1.0)
+    colours = torch.clip(colours, 0.0, 1.0)
 
     return colours
