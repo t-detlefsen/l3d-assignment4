@@ -161,13 +161,13 @@ class SDS:
             if text_embeddings_uncond is not None and guidance_scale != 1:
                 ### YOUR CODE HERE ###
                 noise_pred_uncond = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings_uncond).sample
-                noise_pred = (1 + guidance_scale) * noise_pred_uncond - guidance_scale * noise_pred
+                noise_pred = noise_pred + guidance_scale * (noise_pred - noise_pred_uncond)
  
         # Compute SDS loss
         w = 1 - self.alphas[t]
         ### YOUR CODE HERE ###
-        grad = torch.nan_to_num(grad_scale * w[:, None, None, None] * (noise_pred - noise))
-        targets = latents - grad
-        loss =  F.mse_loss(latents.float(), targets, reduction='sum') / latents.shape[0]
+        grad = -w * (noise_pred - noise) * grad_scale
+        targets = (latents + grad).detach()
+        loss =  F.mse_loss(latents, targets)
 
         return loss
