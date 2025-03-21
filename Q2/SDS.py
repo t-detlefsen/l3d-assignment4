@@ -152,7 +152,7 @@ class SDS:
         with torch.no_grad():
             ### YOUR CODE HERE ###
             # Add noise to image
-            noise = torch.rand_like(latents)
+            noise = torch.randn_like(latents)
             latent_model_input = self.scheduler.add_noise(latents, noise, t)
 
             # Predict noise residual
@@ -161,7 +161,7 @@ class SDS:
             if text_embeddings_uncond is not None and guidance_scale != 1:
                 ### YOUR CODE HERE ###
                 noise_pred_uncond = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings_uncond).sample
-                noise_pred = noise_pred + guidance_scale * (noise_pred - noise_pred_uncond)
+                noise_pred = noise_pred_uncond + guidance_scale * (noise_pred - noise_pred_uncond)
  
         # Compute SDS loss
         w = 1 - self.alphas[t]
