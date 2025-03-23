@@ -165,7 +165,7 @@ def optimize_nerf(
 
   
             ### YOUR CODE HERE ###
-            latents = sds.encode_imgs(pred_rgb)
+            latents = sds.encode_imgs(torchvision.transforms.Resize(size=(512, 512))(pred_rgb))
             loss = sds.sds_loss(latents, text_cond, text_uncond)
 
             # regularizations
