@@ -160,9 +160,13 @@ def optimize_nerf(
             if not args.view_dep_text:
                 text_cond = embeddings["default"]
             else:
-                ### YOUR CODE HERE ###
-                pass
-
+                # Take text embedding closest to sampled azimuth
+                if abs(azimuth) < 45:
+                    text_cond = embeddings["front"]
+                elif abs(azimuth) < 135:
+                    text_cond = embeddings["side"]
+                else:
+                    text_cond = embeddings["back"]
   
             ### YOUR CODE HERE ###
             latents = sds.encode_imgs(torchvision.transforms.Resize(size=(512, 512))(pred_rgb))
